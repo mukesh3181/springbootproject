@@ -54,9 +54,8 @@ public class Userservice
 	public Optional<User> getuserbyid(Long id) 
 	{
 		
-		
-				
-		return userrepository.findById(id);
+          return userrepository.findById(id).orElseThrow(()->new UserNotFoundException("user not found for given id"+id));
+
 	}
 		//return userrepository.findById(id).orElseThrow(()->new UserNotFoundException("user not found for given id"+id));
 
