@@ -1,192 +1,127 @@
-
-package com.crud.crudoperations11.repository;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+package com.crud.crudoperations11.controller;
+ import com.crud.crudoperations11.model.User;
+import com.crud.crudoperations11.service.Userservice;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.test.context.ActiveProfiles;
-
-import com.crud.crudoperations11.model.User;
-import com.crud.crudoperations11.service.Userservice;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-public class UserRepositoryTest 
-{
-	
-
-    @Autowired
-    private UserRepository userrepository;
-   
-    
-     @Test
-     public void testSaveUser() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         User savedUser =userrepository.save(user);
-         assertNotNull(savedUser);
-         assertEquals("arjun",savedUser.getName());
-
-     }
-     @Test
-     public void testGetListOfUsers() {
-         userrepository.save(new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32));
-
-         List<User> userData = userrepository.findAll();
-         assertNotNull(userData);
-     }
-     @Test
-     public void testGetUserById() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         User userData = userrepository.findById(user.getId()).orElse(null);
-         assertNotNull(userData);
-         assertEquals(user.getId(), userData.getId());
-     }
-   
-     
-    
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.when;
+ 
+@WebMvcTest(usercontroller.class)
+public class UserControllerTest {
+ 
+	@Autowired
+	private MockMvc mockMvc;
+ 
+	@MockBean
+    private Userservice userService;
   
-     @Test
-     public void testUpdateUser() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
+	@Autowired
+	private ObjectMapper objectMapper;
+ 
+	@Test
 
-         user.setName("akhil");
-         userrepository.save(user);
-         User updatedUser = userrepository.findById(user.getId()).orElse(null);
-         assertNotNull(updatedUser);
-         assertEquals("akhil", updatedUser.getName());
-     }
-     @Test
-     public void testDeleteUser() 
-     {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         userrepository.deleteById(user.getId());
-         User deletedUser = userrepository.findById(user.getId()).orElse(null);
-         assertNull(deletedUser);
-     }
-     
-     @Test
-     public void testGetUserByName() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         List<User>userData = userrepository.findByName(user.getName());
-         assertNotNull(userData);
-         assertEquals("arjun", userData.get(0).getName());
-     }
-     @Test
-     public void testGetUserByLocation() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         List<User>userData = userrepository.findByLocation(user.getLocation());
-         assertNotNull(userData);
-         assertEquals("hyderabad", userData.get(0).getLocation());
-     }
-     @Test
-     public void testGetUserAgeLessThan() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",28);
-         List<User>userData = userrepository.findByAgeLessThan(user.getAge());
-         assertNotNull(userData);
-         assertTrue(userData.stream().allMatch(user1->user1.getAge()<30));
+	public void testAddUserData() throws Exception {
 
-     }
-     @Test
-     public void testUserNameStartsWith() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         List<User>userData = userrepository.findByNameStartsWith(user.getName());
-         assertNotNull(userData);
-         assertTrue( userData.get(0).getName().startsWith("ar"));
-     }
-   
-     
-     
-     @Test
-     public void testSaveUserFailure() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-       Exception thrown=assertThrows(DataIntegrityViolationException.class,()->userrepository.save(user));
-      assertNotNull(thrown);
-     }
-     
+		User user = new User(1L, "arjun", "arjun23@gmail.com", "123456789", "hyderabad", 32);
 
-     @Test
-     public void testGetUserByIdNotFound() 
-     {
-    	 User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
-         User userData = userrepository.findById(2L).orElse(null);
-         assertNotNull(userData);
-         assertEquals(user.getId(), userData.getId());
-         
-      }
-     
-     @Test
-     public void testGetListOfUsersNotFound() 
-     {
-    	 userrepository.deleteAll();
-         List<User> userData = userrepository.findAll();
-         assertNotEquals(userData.size(),0);
+		when(userService.adduserdata(any(User.class))).thenReturn(user);
+ 
+		mockMvc.perform(MockMvcRequestBuilders.post("/user/add").contentType(MediaType.APPLICATION_JSON)
 
-     }
-     @Test
-     public void testGetUserByNameFailure() {
-         List<User>userData = userrepository.findByName("ravi");
-         assertNotNull(userData);
-         assertEquals("arjun", userData.get(0).getName());
-     }
-     @Test
-     public void testGetUserByLocationNotFound() {
-         List<User>userData = userrepository.findByLocation("pune");
-         assertNotNull(userData);
-         assertEquals("hyderabad", userData.get(0).getLocation());
-     }
-     @Test
-     public void testGetUserAgeLessThanNotFound() {
-         List<User>userData = userrepository.findByAgeLessThan(40);
-         assertNotNull(userData);
-         assertTrue(userData.stream().allMatch(user1->user1.getAge()<30));
+				.content(objectMapper.writeValueAsString(user))).andExpect(MockMvcResultMatchers.status().isCreated())
 
-     }
-     @Test
-     public void testUserNameStartsWithNotFound() {
-         List<User>userData = userrepository.findByNameStartsWith("ravi");
-         assertNotNull(userData);
-         assertTrue( userData.get(0).getName().startsWith("ar"));
-     }
-     
-     @Test
-     public void testUpdateUserFailure() {
-         User user = new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
+				.andExpect(MockMvcResultMatchers.jsonPath("$.name").value("arjun"));
 
-         user.setName("akhil");
-         userrepository.save(user);
-         User updatedUser = userrepository.findById(user.getId()).orElse(null);
-         assertEquals("vijay", updatedUser.getName());
+	}
+	@Test
+    public void testCreateUserFailure() throws Exception
+    {
+		User user = new User(1L, "arjun", "arjun23@gmail.com", "123456789", "hyderabad", 32);
+		
+        when(userService.adduserdata(any(User.class))).thenReturn(user);
+        mockMvc.perform(MockMvcRequestBuilders.post("/user/add")
+        		 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                 .accept(new ObjectMapper().writeValueAsString(user)))
+        .andExpect(MockMvcResultMatchers.status().isNotFound());
+  
      }
-     @Test
-     public void testDeleteUserFailure() 
-     {
-    	 Long nonexistid=999L;
-        Exception thrown=assertThrows(
-        		EmptyResultDataAccessException.class,()->userrepository.deleteById(nonexistid));
-        
-        assertNotNull(thrown);
-     } 
-     
-     
-    
-    
+	@Test
 
+	public void testGetAllUsers() throws Exception {
+
+		User user1 = new User(1L, "arjun", "arjun23@gmail.com", "123456789", "hyderabad", 32);
+
+		User user2 = new User(2L, "arjunn", "arjun233@gmail.com", "124456789", "hyderabad", 32);
+
+		List<User> users = Arrays.asList(user1, user2);
+
+		when(userService.getusersdata()).thenReturn(users);
+ 
+		mockMvc.perform(MockMvcRequestBuilders.get("/user/all")).andExpect(MockMvcResultMatchers.status().isOk())
+
+				.andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value("arjun"))
+
+				.andExpect(MockMvcResultMatchers.jsonPath("$[1].name").value("arjunn"));
+
+	}
+	@Test
+    public void testGetAllUsersFailure() throws Exception {
+   	 User user1=new User((long) 1, "arjun","arjun23@gmail.com","123456789","hyderabad",32);
+		  User user2=new User((long) 2, "arjunn","arjun233@gmail.com","124456789","hyderabad",32);
+		  List<User>user3=Arrays.asList(user1,user2);
+       when(userService.getusersdata()).thenReturn(user3);
+ 
+       mockMvc.perform(MockMvcRequestBuilders.get("/user/all"))
+               .andExpect(MockMvcResultMatchers.status().isNotFound());
+               
+   }
+		
+ 
+	@Test
+	public void testGetUserById() throws Exception {
+
+		User user = new User(1L, "arjun", "arjun23@gmail.com", "123456789", "hyderabad", 32);
+
+		when(userService.getuserbyid(1L)).thenReturn(Optional.of(user));
+ 
+		mockMvc.perform(MockMvcRequestBuilders.get("/user/all/1")).andExpect(MockMvcResultMatchers.status().isOk())
+
+				.andExpect(MockMvcResultMatchers.jsonPath("$.name").value("arjun"));
+
+	}
+	
+	@Test
+    public void testGetUserByIdFailure() throws Exception
+    {
+		User user = new User(1L, "arjun", "arjun23@gmail.com", "123456789", "hyderabad", 32);
+        when(userService.getuserbyid(1L)).thenReturn(Optional.of(user));
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/all/1"))
+        .andExpect(MockMvcResultMatchers.status().isNotFound());        
+    }
+ 
+	@Test
+
+	public void testDeleteUser() throws Exception {
+
+		willDoNothing().given(userService).deletebyid(1L);
+ 
+		mockMvc.perform(MockMvcRequestBuilders.delete("/user/delete/1"))
+
+				.andExpect(MockMvcResultMatchers.status().isNoContent());
+
+	}
+	
 }
+
+ 
